@@ -1,0 +1,37 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+TextureCube<float3> cube;
+SamplerState _LinearClamp;
+RWStructuredBuffer<float3> output;
+
+float3 fibonacci_sphere(float index, float numSamples)
+{
+    float phi = 3.1415926535897932384626433832795 * (3.0 - sqrt(5.0)); // Golden angle in radians
+    float y = 1.0 - (1.0 / numSamples) + (2.0 * index) / numSamples;  // y goes from 1 to -1
+    float radius = sqrt(1.0 - y * y);  // Radius at y
+
+    float theta = phi * index;  // Golden angle increment
+    float x = cos(theta) * radius;
+    float z = sin(theta) * radius;
+
+    return float3(x, y, z);
+}
+
+
+
+float SH00(float3 p )
+{
+    const float k0 = 0.2820947917738781434740397257f;
+    return k0;
+}
+
+[numthreads(8,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+
+    float3 p = fibonacci_sphere(id.x,1024);
+	output[id.x].xyz = cube.SampleLevel(_LinearClamp,p,0)*SH00(p);
+}
