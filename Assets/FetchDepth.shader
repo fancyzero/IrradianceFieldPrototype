@@ -39,10 +39,13 @@ Shader "Hidden/FetchDepth"
 
             sampler2D _MainTex;
             sampler2D _CameraDepthTexture;
-            fixed4 frag (v2f i) : SV_Target
+            float4 frag (v2f i) : SV_Target
             {
                 float depth = Linear01Depth(tex2D(_CameraDepthTexture, i.uv).r);
-                return depth*100;
+                float4 ret = depth>=0.99?1:0;
+                ret.a = 1;
+
+                return ret;
             }
             ENDCG
         }
