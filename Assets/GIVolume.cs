@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using UnityEngine;
+using UnityEditor;
 
 public class GIVolume : MonoBehaviour
 {
@@ -59,10 +60,20 @@ public class GIVolume : MonoBehaviour
 
 
         var probes = GetProbePositions();
-        foreach ( var prob in probes)
+        var cnt = GetProbeCount();
+        for( int x = 0; x < cnt.x; x++)
         {
-            Gizmos.DrawCube(prob, new Vector3(0.1f,0.1f,0.1f));
-        }
+            for (int y = 0; y < cnt.y; y++)
+            {
+                for (int z = 0; z < cnt.z; z++)
+                {
+                    Gizmos.DrawCube(probes[x, y, z], new Vector3(0.1f, 0.1f, 0.1f));
+                    //draw label on each gizmo
+                    Handles.Label(probes[x, y, z]+new Vector3(0,0.1f,0), string.Format("{0},{1},{2}",x,y,z));
+                }
+            }
+        }   
+
       
     }
 

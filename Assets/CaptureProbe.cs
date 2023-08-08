@@ -28,29 +28,6 @@ public class CaptureProbe : EditorWindow
         }
     }
     
-    //Convert Cubemap to texture array by given cubemap
-    private RenderTexture ConvertCubemapToTextureArray(Cubemap cubeMap)
-    {
-        RenderTextureDescriptor desc = new RenderTextureDescriptor();
-        desc.autoGenerateMips = false;
-        desc.bindMS = false;
-        desc.colorFormat = RenderTextureFormat.ARGBFloat;
-        desc.depthBufferBits = 0;
-        desc.dimension = UnityEngine.Rendering.TextureDimension.Tex2DArray;
-        desc.enableRandomWrite = false;
-        desc.height = cubeMap.height;
-        desc.width = cubeMap.width;
-        desc.msaaSamples = 1;
-        desc.sRGB = true;
-        desc.useMipMap = false;
-        desc.volumeDepth = 6;
-        RenderTexture converted_input = new RenderTexture(desc);
-        converted_input.Create();
-
-        for (int face = 0; face < 6; ++face)
-            Graphics.CopyTexture(cubeMap, face, 0, converted_input, face, 0);
-        return converted_input;
-    }
 
     //Create 3D Texture fomr 3d array of floats
     private Texture3D Create3DTexture(SkyVisibilityProbeData SkyVisData)
@@ -72,7 +49,7 @@ public class CaptureProbe : EditorWindow
                 for (int z = 0; z < zSize; z++)
                 {
                     var probe = SkyVisData.probes[x+ y * xSize+ z * xSize * ySize];
-                    colors[index] = new Color(probe.coeffs[0], probe.coeffs[0], probe.coeffs[0]);
+                    colors[x + y * xSize + z * xSize * ySize] = new Color(probe.coeffs[0], probe.coeffs[0], probe.coeffs[0]);
                     index++;
                 }
             }
@@ -88,6 +65,7 @@ public class CaptureProbe : EditorWindow
         var camera = camerObj.AddComponent<Camera>();
         camerObj.AddComponent<DepthCamera>();
         camera.fieldOfView = 90;
+        camera.nearClipPlane = 0.01f;
 
         var volumes = FindObjectsOfType<GIVolume>();
         int i = 0;
@@ -98,13 +76,13 @@ public class CaptureProbe : EditorWindow
                 var probeCount = v.GetProbeCount();
                 SkyVisibilityProbeData.SkyVisibilityProbe[,,] skyVisibilityProbeArray = new SkyVisibilityProbeData.SkyVisibilityProbe[probeCount.x, probeCount.y, probeCount.z];
                 var probes = v.GetProbePositions();
-                for ( int x =0; x < probeCount.x; x++)
+                for (int x = 0; x < probeCount.x; x++)
                 {
                     for (int y = 0; y < probeCount.y; y++)
                     {
                         for (int z = 0; z < probeCount.z; z++)
                         {
-                            Vector3 probPos = probes[x,y,z];
+                            Vector3 probPos = probes[x, y, z];
                             if (EditorUtility.DisplayCancelableProgressBar("Cancelable", string.Format("Caputring {0}/{1}", i, probes.Length), (float)(i) / probes.Length))
                                 break;
                             var cubeMap = new Cubemap(128, TextureFormat.RGBAFloat, false);
@@ -120,7 +98,7 @@ public class CaptureProbe : EditorWindow
                                 skyVisibilityCoeffs[j] = output[j].x;
                             }
                             skyVisibilityProbeArray[x, y, z].coeffs = skyVisibilityCoeffs;
-                            AssetDatabase.CreateAsset(cubeMap, string.Format("Assets/CubeMaps/{0}.asset", i));
+                            AssetDatabase.CreateAsset(cubeMap, string.Format("Assets/CubeMaps/{0}_{1}_{2}.asset", x,y,z));
                             i += 1;
                         }
                     }
@@ -132,11 +110,11 @@ public class CaptureProbe : EditorWindow
                 asset.xSize = probeCount.x;
                 asset.ySize = probeCount.y;
                 asset.zSize = probeCount.z;
-                for (int x = 0; x < probeCount.x; x++)
+                for (int z = 0; z < probeCount.z; z++)
                 {
                     for (int y = 0; y < probeCount.y; y++)
                     {
-                        for (int z = 0; z < probeCount.z; z++)
+                        for (int x = 0; x < probeCount.x; x++)
                         {
                             asset.probes.Add(skyVisibilityProbeArray[x, y, z]);
                         }
@@ -162,7 +140,7 @@ public class CaptureProbe : EditorWindow
             EditorUtility.ClearProgressBar();
         }
 
-        DestroyImmediate(camerObj);
+        //DestroyImmediate(camerObj);
         Debug.Log("Cubemap saved as an asset.");
 
 
@@ -190,7 +168,7 @@ public class CaptureProbe : EditorWindow
         desc.height = input.height;
         desc.width = input.width;
         desc.msaaSamples = 1;
-        desc.sRGB = true;
+        desc.sRGB = false;
         desc.useMipMap = false;
         desc.volumeDepth = 6;
         RenderTexture converted_input = new RenderTexture(desc);
