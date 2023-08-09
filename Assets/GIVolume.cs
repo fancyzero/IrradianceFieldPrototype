@@ -6,6 +6,8 @@ using UnityEditor;
 
 public class GIVolume : MonoBehaviour
 {
+    public bool drawLabels;
+    public bool drawCubes;
     public UnityEngine.Color gizmoColor = UnityEngine.Color.yellow;
     public Vector3 volumeSize = new Vector3(1f, 1f, 1f);
     public float probeSize = 1;//in unit squre
@@ -67,9 +69,11 @@ public class GIVolume : MonoBehaviour
             {
                 for (int z = 0; z < cnt.z; z++)
                 {
-                    Gizmos.DrawCube(probes[x, y, z], new Vector3(0.1f, 0.1f, 0.1f));
+                    if (drawCubes)
+                        Gizmos.DrawCube(probes[x, y, z], new Vector3(0.1f, 0.1f, 0.1f));
                     //draw label on each gizmo
-                    Handles.Label(probes[x, y, z]+new Vector3(0,0.1f,0), string.Format("{0},{1},{2}",x,y,z));
+                    if (drawLabels)
+                        Handles.Label(probes[x, y, z]+new Vector3(0,0.1f,0), string.Format("{0},{1},{2}",x,y,z));
                 }
             }
         }   
